@@ -497,7 +497,11 @@ helm install kuberay-operator kuberay/kuberay-operator --version 1.1.0
 #vérif
 kubectl get crd | Select-String ray
 ```
+
+
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+
+
 ### 7.2. Manifest RAY `ray-cluster.yaml`
 ```yaml
 apiVersion: ray.io/v1
@@ -607,6 +611,8 @@ kubectl get pods -w
 kubectl port-forward svc/raycluster-kuberay-head-svc 8265:8265
 ```
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+
+
 ---
 
 ## 8. scaling
@@ -655,7 +661,9 @@ kubectl get pods -w
 kubectl scale --replicas=0 raycluster/raycluster-kuberay --component=gpu-group
 
 ```
+
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+
 
 ## 9. Entraîner un modèle
 **tunnel vers le Dashboard Ray**
