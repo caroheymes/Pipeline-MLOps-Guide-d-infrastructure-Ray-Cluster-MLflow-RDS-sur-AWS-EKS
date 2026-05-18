@@ -62,8 +62,6 @@ Pour comprendre l'organisation de cette documentation, on peut imaginer le dépl
 
 # Sommaire
 
-# Sommaire
-
 ## Phase 1 : Construction des murs (Cluster EKS)
 - [1. Setup](#1-setup)
 - [2. Creation du cluster dans ray-ml-cluster.yaml](#2-creation-du-cluster-dans-ray-ml-clusteryaml)
