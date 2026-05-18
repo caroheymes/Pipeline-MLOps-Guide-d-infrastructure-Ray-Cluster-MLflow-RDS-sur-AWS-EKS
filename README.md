@@ -154,7 +154,9 @@ $CLUSTER_NAME = ((aws eks list-clusters --region $REGION --profile $PROFILE --ou
 
 ```
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
----
+
+
+
 # Phase 2 : Création des badges de sécurité (IRSA / OIDC / Réseau)
 ## 3. Configuration IAM Roles for Service Account (IRSA)
 
@@ -400,7 +402,10 @@ eksctl create iamserviceaccount `
 kubectl apply -f external-secret.yaml
 kubectl get externalsecrets`
 ```
+
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+
+
 ---
 ## Phase 3 : Entrée des ouvriers et exécution des travaux (MLflow / Ray)
 
@@ -448,6 +453,7 @@ kubectl get pods -w
 kubectl port-forward svc/mlflow-service 5000:5000
 ```
 <p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+
 ---
 
 ## 7. Ray Cluster
@@ -480,6 +486,8 @@ docker tag $REPO_NAME:latest "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/ray-trai
 docker push "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest"
 
 ```
+
+
 ### 7.1. Installer Kuberay
 ```PowerShell
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
