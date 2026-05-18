@@ -153,13 +153,14 @@ kubectl get pods -n kube-system # composants système d'AWS ok
 $CLUSTER_NAME = ((aws eks list-clusters --region $REGION --profile $PROFILE --output json) | ConvertFrom-Json).clusters[0]
 
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ---
 # Phase 2 : Création des badges de sécurité (IRSA / OIDC / Réseau)
 ## 3. Configuration IAM Roles for Service Account (IRSA)
 
 ### = Permissions sécurisées for Service Account (IRSA) avec eksctl
 
-### 1. Activer le pont OIDC
+### 3.1. Activer le pont OIDC
 OIDC est l'acronyme de *OpenID Connect*. Dans le contexte du projet c'est une couche d'authentification basée sur le protocole OAuth 2.0.
 
 Dans l'infrastructure AWS EKS, le pont OIDC sert de "passerelle de confiance" : il permet à au cluster Kubernetes de prouver de manière sécurisée à AWS IAM que tel ou tel composant (comme Ray ou MLflow) a le droit de demander un badge d'accès (un rôle IRSA - IAM Role for service account).
@@ -172,7 +173,7 @@ eksctl utils associate-iam-oidc-provider `
   --approve `
   --profile $PROFILE
 ```
-### 2. Créer le compte de service (Service Account)
+### 3.2. Créer le compte de service (Service Account)
 ```powershell
 eksctl create iamserviceaccount `
   --name mlflow-s3-access `
@@ -184,7 +185,7 @@ eksctl create iamserviceaccount `
   --region $REGION `
   --profile $PROFILE
 ```
-### 3. Récupérer l'ID du réseau (VPC) et les subnets
+### 3.3. Récupérer l'ID du réseau (VPC) et les subnets
 
 ```powershell
 aws eks describe-cluster `
@@ -210,7 +211,7 @@ $SUBNETS = ((aws eks describe-cluster `
 --query "cluster.resourcesVpcConfig" `
 --output json) | ConvertFrom-Json).subnetIds
 ```
-### 4. Groupe de sécurité
+### 3.4. Groupe de sécurité
 ```powershell
 
 $SG_ID = aws ec2 create-security-group `
@@ -222,7 +223,7 @@ $SG_ID = aws ec2 create-security-group `
   --query "GroupId" `
   --output text
 ```
-### 5. Autoriser le trafic PostgreSQL
+### 3.5. Autoriser le trafic PostgreSQL
 = accepter les connexions sur le port 5432 (PostgreSQL), uniquement si elles proviennent de l'intérieur de ton réseau
 
 ```powershell
@@ -243,7 +244,7 @@ aws ec2 authorize-security-group-ingress `
   --profile $PROFILE
 ```
 
-### 6. Créer le groupe de sous-réseaux RDS
+### 3.6. Créer le groupe de sous-réseaux RDS
 AWS a besoin qu'on "regroupe" les sous-réseaux EKS dans un dossier spécial pour RDS. C'est ce qui garantit que la base sera déployée exactement sur les mêmes routes que tes nœuds
 ```powershell
 aws rds create-db-subnet-group `
@@ -253,7 +254,7 @@ aws rds create-db-subnet-group `
   --region $REGION `
   --profile $PROFILE
 ```
-### 7. Gestion des secrets (mot de passe pur la base de données)
+### 3.7. Gestion des secrets (mot de passe pur la base de données)
 On crée le secret dans aws secrets manager > autre type de secrets
 Clé : <SECRET_NAME> | Valeur : 
 Clé : <DB_PASSWORD> | Valeur :xxx
@@ -267,6 +268,7 @@ $DB_PASSWORD = (((aws secretsmanager get-secret-value `
    --region $REGION `
    --profile $PROFILE) | ConvertFrom-Json).SecretString | ConvertFrom-JSON).password
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ---
 
 ## 4. Création de la base RDS
@@ -311,6 +313,7 @@ $DB_ENDPOINT = ((aws rds describe-db-instances `
    --output json) | ConvertFrom-Json).DBInstances.MasterUsername
 
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ---
 
 ## 5. Gérer l'accès de la DB au secret dans Kubernetes
@@ -397,6 +400,7 @@ eksctl create iamserviceaccount `
 kubectl apply -f external-secret.yaml
 kubectl get externalsecrets`
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ---
 ## Phase 3 : Entrée des ouvriers et exécution des travaux (MLflow / Ray)
 
@@ -443,6 +447,7 @@ kubectl get pods -w
 # accès à l'interface
 kubectl port-forward svc/mlflow-service 5000:5000
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ---
 
 ## 7. Ray Cluster
@@ -475,7 +480,7 @@ docker tag $REPO_NAME:latest "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/ray-trai
 docker push "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest"
 
 ```
-### 1. Installer Kuberay
+### 7.1. Installer Kuberay
 ```PowerShell
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
 helm repo update
@@ -484,7 +489,8 @@ helm install kuberay-operator kuberay/kuberay-operator --version 1.1.0
 #vérif
 kubectl get crd | Select-String ray
 ```
-### 2. Manifest RAY `ray-cluster.yaml`
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+### 7.2. Manifest RAY `ray-cluster.yaml`
 ```yaml
 apiVersion: ray.io/v1
 kind: RayCluster
@@ -592,10 +598,12 @@ kubectl get pods -w
 # accéder au dashboard ray
 kubectl port-forward svc/raycluster-kuberay-head-svc 8265:8265
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
+---
 
 ## 8. scaling
 
-### 1. Avec un rolling update suite à une modif de machine
+### 8.1. Avec un rolling update suite à une modif de machine
 ```powershell
 eksctl upgrade nodegroup 
 --config-file=ray-ml-cluster.yaml 
@@ -613,7 +621,7 @@ eksctl scale nodegroup `
   --profile $PROFILE
 
 ```
-### 2. Détruire et recréer le groupe
+### 8.2. Détruire et recréer le groupe
 ```powershell
 # 1. Supprimer l'ancien pool de petites machines (ça prend 2 min)
 eksctl delete nodegroup `
@@ -639,6 +647,7 @@ kubectl get pods -w
 kubectl scale --replicas=0 raycluster/raycluster-kuberay --component=gpu-group
 
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 
 ## 9. Entraîner un modèle
 **tunnel vers le Dashboard Ray**
@@ -660,6 +669,7 @@ kubectl cp .\train_v2.py "${HEAD_POD}:/home/ray/train_v2.py"
 # Lancer l'entraînement
 python /home/ray/train.py
 ```
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 ## 10. Suppression des ressources
 
 ```powershell
@@ -685,6 +695,6 @@ Une fois le cluster supprimé, l'outil eksctl nettoie 95% des ressources. Par s�
 **Amazon S3** : AWS ne supprime jamais un bucket S3 qui contient des fichiers (tes artefacts MLflow ou tes checkpoints Ray). Les buckets vides ne coûtent rien, mais si tu as des gigaoctets de modèles stockés, va dans le service S3 pour vider et supprimer ton bucket si tu n'en as plus besoin.
 
 **Amazon ECR (Images Docker)** : ray-training est stockée sur ECR. Le stockage ECR est très peu cher (quelques centimes par Go par mois), mais si tu veux un nettoyage à 100%, va dans ECR et supprime le dépôt ray-training.
-
+<p align="right"><a href="#sommaire">▲ Retour au sommaire</a></p>
 
 
