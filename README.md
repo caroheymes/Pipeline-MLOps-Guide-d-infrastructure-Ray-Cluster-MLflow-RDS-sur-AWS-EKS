@@ -104,7 +104,7 @@ aws configure
 choco install eksctl
 
 # profil admin par défaut 
-$PROFILE = "admin-user"
+$PROFILE = <PROFIL_AVEC_DROITS_ADMIN>
 $ACCOUNT_ID = "..."
 $REGION = "..."
 
